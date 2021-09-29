@@ -7,17 +7,14 @@ open System.Net.Http
 open FSharp.Data
 
 [<Literal>]
-let ghUrl = "https://api.github.com/users/taylnath/repos"
+let ghUrl = "https://api.github.com/repos/taylnath/pet-hotel-express"
 
 type GHData = JsonProvider<ghUrl>
-
-let repoData = GHData.Load(ghUrl)
-
-type RepoData = JsonProvider<repoData.[0]>
 
 type ProjectConfig = {
     disableLiveRefresh: bool
 }
+
 type PreProject = {
     name: string
     repo: string
@@ -92,8 +89,11 @@ let getContent (fileContent : string) =
     |> cutOnFoundIndices indicesOfSeparators []
     |> List.map (fun x -> List.choose splitKey x)
     |> List.map Map.ofList
-    |> List.map (fun m -> {name = m.["name"]; repo = m.["repo"]; 
-        desc = Option.defaultValue "None" repoData.[Array.findIndex (fun (x: Root array) -> x.Name == m.["name"]) repoData].Description})
+    |> List.map (fun m -> 
+        let name = m.["name"]
+        let repo = m.["repo"]
+        let desc = GHData.Load($"https://api.github.com/repos/taylnath/{repo}").Description
+        {name = name; repo = repo; desc = desc} )
 
 let trimString (str : string) =
     str.Trim().TrimEnd('"').TrimStart('"')
